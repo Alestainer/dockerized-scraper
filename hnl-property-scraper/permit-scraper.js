@@ -130,6 +130,32 @@ var posseButtons = {
     occupancyResidential: 'input[id^="OccupancyGroupResidential_713850_"]',
 };
 
+function processPermitLink(self, link, form) {
+  self.thenOpen('http:' + link, function () {
+
+    var permit = form;
+
+    permit['link'] = link;
+    // Parsing the permit
+    for (var key in posseSelectorDictionary) {
+      permit[key] = this.fetchText(posseSelectorDictionary[key]);
+    }
+    for (var key in posseButtons) {
+      permit[key] = this.getElementAttribute(posseButtons[key], 'value');
+    }
+    console.log('Collected permit: ', permit.applicationNumber);
+
+    var postAddress = process.env.DOCKER_SERVER + '/permits/' + String(permit.applicationNumber);
+
+    this.then(function () {
+      this.thenOpen(postAddress, {
+        method: 'post',
+        data: permit // this data is json of a permit
+      });
+    });
+  });
+}
+
 function processTMK(link, self) {
   var posseId = 0;
 
@@ -181,31 +207,7 @@ function processTMK(link, self) {
 
     this.each(links, function (self, link) {
       console.log('link in process: ', link);
-
-      self.thenOpen('http:' + link, function () {
-        // TODO check if link is already present in the database
-
-        var permit = form;
-
-        permit['link'] = link;
-        // Parsing the permit
-        for (var key in posseSelectorDictionary) {
-          permit[key] = this.fetchText(posseSelectorDictionary[key]);
-        }
-        for (var key in posseButtons) {
-          permit[key] = this.getElementAttribute(posseButtons[key], 'value');
-        }
-        console.log('Collected permit: ', permit.applicationNumber);
-
-        var postAddress = process.env.DOCKER_SERVER + '/permits/' + String(permit.applicationNumber);
-
-        this.then(function () {
-          this.thenOpen(postAddress, {
-            method: 'post',
-            data: permit // this data is json of a permit
-          });
-        });
-      });
+      processPermitLink(self, link, form);
     });
   });
 }
@@ -216,7 +218,7 @@ function parse(N) {
 
   casper.then( function () {
 
-    casper.each(Array.apply(null, {length: N}).map(Number.call, Number), function (self, _) {
+    casper.each(Array.apply(null, {length: N}).map(Number.call, Number), function (self) {
 
       var link = '';
 
@@ -235,6 +237,6 @@ function parse(N) {
   casper.run();
 }
 
-var N = 20000;
+var N = 200000;
 
 parse(N);
