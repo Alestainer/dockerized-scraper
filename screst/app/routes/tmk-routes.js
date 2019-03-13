@@ -24,7 +24,6 @@ module.exports = function(app, db) {
   app.post('/shorttmks/:id', (req, res) => {
     const id = req.params.id;
     const note = {TMK: Number(id), parsed: req.body.body, lastParsed: new Date() };
-    // const details = {'_id': new ObjectID(id)};
     db.collection('shorttmks').update({TMK: Number(id)}, note, {upsert: true}, (err) => {
       if (err) {
         res.send({'error': 'An error has occurred: ', err});
@@ -45,5 +44,3 @@ module.exports = function(app, db) {
     });
   });
 };
-
-// forEach( (tmk) => {tmk.parsed = true; db.collection('shorttmks').save(tmk); }).

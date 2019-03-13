@@ -5,7 +5,7 @@ let db = require('./config/db');
 
 const app = express();
 
-const port = 8081;
+const port = 8082;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
